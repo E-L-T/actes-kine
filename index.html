@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Sélection Condition de Kiné</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #042548;
+            text-align: center;
+        }
+        label, select, p, option {
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+        }
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: white;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #result {
+            font-weight: bold;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #buttonContainer {
+            display: flex;
+            justify-content: center; /* Centre horizontalement */
+            flex-wrap: wrap; /* Permet aux boutons de s'envelopper sur plusieurs lignes si nécessaire */
+        }
+        .button-margin {
+            margin-right: 10px; /* Ajoute un espace à droite du bouton */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Cotation des actes kiné - NGAP 2024</h1>
+    <label for="conditionType">Type de pathologie :</label>
+    <select id="conditionType">
+        <option value="">Sélectionnez...</option>
+    </select>
+
+    <label for="detailsList">Détails :</label>
+    <select id="detailsList">
+        <option value="">Choisissez...</option>
+    </select>
+
+    <label for="subDetailsList" style="display:none;">Précisions :</label>
+    <select id="subDetailsList" style="display:none;">
+        <option value="">Choisissez...</option>
+    </select>
+
+    <p id="result"></p>
+    <!-- Boutons pour choisir le tarif Métropole ou Outre-Mer -->
+    <div id="buttonContainer">
+        <button id="btnMetropole" class="button-margin">Tarif Métropole</button>
+        <button id="btnOutreMer">Tarif Outre-Mer</button>
+    </div>
+     <!-- Conteneur pour le texte NGAP -->
+     <div id="ngapTextContainer">
+        <p id="ngapText"></p>
+    </div>
+    <script>
+         var data = {
+    "Rachis (ortho/rhumato)": {
+        "Lombalgie commune (soumis à référentiel)": "RAM 7.49",
+        "Rachis lombo-sacré hors référentiel": {
+            "sans chirurgie": "RAM 7.51",
+            "avec chirurgie": "RAO 7.49"
+        },
+        "Rachis dorsal": {
+            "sans chirurgie": "RAM 7.50",
+            "avec chirurgie": "RAO 7.48"
+        },
+        "Cervicalgie non spécifique sans atteinte neurologique - Acte soumis à référentiel": "RAM 7.47",
+        "Trauma récent du rachis cervical sans lésion neurologique - Acte soumis à référentiel": "RAM 7.48",
+        "Rachis cervical (hors référentiel)": {
+            "sans chirurgie": "RAM 7.52",
+            "avec chirurgie": "RAO 7.50"
+        },
+        "Au moins deux segments du rachis": {
+            "sans chirurgie": "RAM 7.53",
+            "avec chirurgie sur au moins un segment": "RAO 7.51"
+        }
+    },
+    "Membre Superieur(ortho/rhumato)": {
+        "Libération du nerf médian au canal carpien - Acte soumis à référentiel": "RSC 7.49",
+        "Poignet ou main (hors référentiel)": {
+            "non opérée": "VSM 7.50",
+            "opérée": "VSC 7.51"
+        },
+        "Fracture de l’extrémité distale des deux os de l’avant-bras - Acte soumis à référentiel": {
+            "non opérée": "RSM 7.51",
+            "opérée": "RSC 7.50"
+        },
+        "Fracture avec ou sans luxation du coude chez l’adulte - Acte soumis à référentiel": {
+            "non opérée": "RSM 7.52",
+            "opérée": "RSC 7.52"
+        },
+        "Coude ou de l'avant-bras (hors référentiel)": {
+            "non opérée": "VSM 7.49",
+            "opérée": "VSC 7.49"
+        },
+        "Tendinopathie de la coiffe des rotateurs non opérée - Acte soumis à référentiel": "RSM 7.49",
+        "Réinsertion et/ou suture d’un ou de plusieurs tendons de la coiffe des rotateurs de l’épaule, par arthroscopie ou abord direct - Acte soumis à référentiel": "RSC 7.51",
+        "Fracture non opérée de l’extrémité proximale de l’humérus - Acte soumis à référentiel": "RSM 7.50",
+        "Epaule ou du bras (hors référentiel)": {
+            "non opérée": "VSM 7.48",
+            "opérée": "VSC 7.50"
+        },
+        "Au moins deux segments du même membre supérieur": {
+            "sans chirurgie": "VSM 7.51",
+            "avec chirurgie sur au moins un segment": "VSC 7.52"
+        }
+    },
+    "Membre Inférieur(ortho/rhumato)": {
+        "Entorse externe récente de cheville-pied": {
+            "opérée": "RIC 7.51",
+            "non opérée": "RIM 7.50"
+        },
+        "Cheville ou pied (hors référentiel)": {
+            "non opérée": "VIM 7.50",
+            "opérée": "VIC 7.51"
+        },
+        "Arthroplastie du genou par prothèse totale ou uni-compartimentaire - Acte soumis à référentiel": "RIC 7.52",
+        "Reconstruction du ligament croisé antérieur du genou - Acte soumis à référentiel": "RIC 7.48",
+        "Méniscectomie isolée, totale ou subtotale, par arthroscopie - Acte soumis à référentiel": "RIC 7.49",
+        "Genou ou de la jambe (hors référentiel)": {
+            "non opérée": "VIM 7.51",
+            "opérée": "VIC 7.50"
+        },
+        "Arthroplastie de hanche par prothèse totale - Acte soumis à référentiel": "RIC 7.50",
+        "Hanche ou de la cuisse (hors référentiel)": {
+            "non opérée": "VIM 7.49",
+            "opérée": "VIC 7.49"
+        },
+        "Au moins deux segments du même membre inférieur": {
+            "sans chirurgie": "VIM 7.52",
+            "avec chirurgie sur au moins un segment": "VIC 7.52"
+        }
+    },
+    "Déviation du Rachis": {
+        "Déviation du Rachis lombo-sacré": "DRA 7.49",
+        "Déviation du Rachis dorsal": "DRA 7.48",
+        "Déviation du Rachis cervical": "DRA 7.51",
+        "Déviation portant sur au moins deux segments rachis": "DRA 7.50"
+    },
+    "Amputation": {
+        "Un membre supérieur": "APM 7.51",
+        "Un membre inférieur": "APM 7.50",
+        "Au moins 2 membres": "APM 9.50"
+    },
+    
+    "Plusieurs membres, ou tronc et un ou plusieurs membres(ortho/rhumato)": {
+                "sans chirurgie, au moins 2 territoires lésés ": "TER 9.49",
+                "avec chirurgie sur au moins un des territoires, au moins 2 territoires lésés ": "TER 9.51"
+    },
+    "Maladies rhumatismales inflammatoires": {
+            "atteinte localisée à un membre ou le tronc": "NMI 8",
+            "atteinte de plusieurs membres, ou du tronc et d'un ou plusieurs membres": "NMI 9.01"
+            
+    },
+    "Neuro": {
+        "Atteintes périphériques radiculaires ou tronculaires": {
+            "atteintes localisées à un membre ou à la face": "NMI 8.50",
+            "atteintes intéressant plusieurs membres": "NMI 10.01"
+        },
+        "Hémiplégie": "NMI 9",
+        "Paraplégie et tétraplégie": "NMI 11.01",
+        "Affections neurologiques stables ou évolutives (commande musculaire, tonus, sensibilité, équilibre, coordination...)": {
+            "localisation des déficiences à un membre et sa racine": "NMI 8.51",
+            "localisation des déficiences à 2 membres ou plus, ou d'un membre et à tout ou partie du tronc et de la face": "NMI 10"
+        },
+        "Myopathie": "NMI 10.99",
+        "Encéphalopathie infantile (du stade initial aux conséquences à l’âge adulte)": "NMI 11",
+        "Rééducation des enfants présentant une paralysie cérébrale ou un polyhandicap": "TER 16"
+    },
+    "Respi": {
+        "Désencombrement urgent": "ARL 8.49",
+        "Maladies respiratoires, obstructives, restrictives ou mixtes": "ARL 8.50",
+        "Rééducation préopératoire ou post-opératoire": "ARL 8.51",
+        "Mucoviscidose": "ARL 10",
+        "Handicap respiratoire chronique": {
+            "prise en charge individuelle": "ARL 28",
+            "En prise en charge de groupe de 2 à 4 personnes avec rééducation respiratoire en individuel": "ARL 20"
+        }
+    },
+    "Maxillo-facial, Vestibulaire et ORL": {
+        "Rééducation maxillo-faciale en dehors de la paralysie faciale": "ARL 7.99",
+        "Rééducation vestibulaire et des troubles de l'équilibre": "ARL 8",
+        "Rééducation des troubles de la déglutition isolés": "ARL 8.01"
+    },
+    "Affections vasculaires": {
+        "Artériopathie des membres inférieurs": "RAV 8.01",
+        "Insuffisance veineuse des membres inférieurs avec retentissement articulaire et/ou troubles trophiques": "RAV 7.99",
+        "Lymphœdèmes vrais (après chirurgie et/ou radiothérapie, lymphœdèmes congénitaux) par drainage manuel": {
+            "pour un membre ou pour le cou et la face": "RAV 8",
+            "pour deux membres": "RAV 9"
+        },
+        "Lymphœdème du membre supérieur après traitement d’un cancer du sein, associée à une rééducation de l’épaule homolatérale à la phase intensive du traitement du lymphœdème": "RAV 15.5",
+        "Supplément pour bandage multicouche": {
+            "un membre": "RAV 1",
+            "deux membres": "RAV 2"
+        }
+    },
+    "Rééducation de la paroi abdominale": {
+        "Rééducation abdominale pré-opératoire ou post-opératoire": "RAB 8.01",
+        "Rééducation abdominale du post-partum": "RAB 8"
+    },
+    "Périnéosphinctérien": {
+        "Rééducation périnéale active sous contrôle manuel et/ou électrostimulation et/ou biofeedback": "RAB 8.50"
+    },
+    "Déambulation du sujet âgé": {
+        "Rééducation analytique et globale, musculo-articulaire chez le sujet âgé": "RPE 8.50",
+        "Déambulation de la personne âgée (20min)": "RPE 6"
+    },
+    "Brûlures": {
+        "Brûlures localisées à un membre ou à un segment de membre": "RPB 8",
+        "Brûlures étendues à plusieurs membres et/ou au tronc": "RPB 9"
+    },
+    "Soins palliatifs": {
+        "Cotation journalière forfaitaire quel que soit le nombre d'interventions": "PLL 12"
+    },
+        };
+     // Nouvelles variables et modifications
+    var keyValueMetropole = 2.21;
+    var keyValueOutreMer = 2.43;
+    var currentKeyValue = keyValueMetropole; // Valeur par défaut
+    var ngapTexts = {
+        "RAM 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation dans le cadre de la prise en charge d’une lombalgie commune Acte soumis à référentiel",
+    "RAM 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis lombo-sacré hors référentiel  > - sans chirurgie",
+    "RAO 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis lombo-sacré hors référentiel  > - avec chirurgie",
+    "RAM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis dorsal  > - sans chirurgie",
+    "RAO 7.48": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis dorsal  >- avec chirurgie",
+    "RAM 7.47": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation dans le cadre de la prise en charge d’une cervicalgie non spécifique sans atteinte neurologique - Acte soumis à référentiel",
+    "RAM 7.48": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation dans le cadre d’un traumatisme récent du rachis cervical sans lésion neurologique -  Acte soumis à référentiel",
+    "RAM 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis cervical (hors référentiel) > - sans chirurgie",
+    "RAO 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection du rachis cervical (hors référentiel) > - avec chirurgie",
+    "RAM 7.53": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection d'au moins deux segments du rachis  > - sans chirurgie",
+    "RAO 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du rachis (hors déviations latérales ou sagittales du rachis de l’article 1 E.)  > Rééducation des conséquences d'une affection d'au moins deux segments du rachis  > - avec chirurgie sur au moins un segment",
+    "RSC 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F) > Rééducation après libération du nerf médian au canal carpien -  Acte soumis à référentiel",
+    "VSM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection du poignet ou main (hors référentiel) > - non opérée",
+    "VSC 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection du poignet ou main (hors référentiel) > - opérée",
+    "RSM 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une fracture de l’extrémité distale des deux os de l’avant-bras - Acte soumis à référentiel > - non opérée",
+    "RSC 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une fracture de l’extrémité distale des deux os de l’avant-bras - Acte soumis à référentiel > - opérée",
+    "RSM 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une fracture avec ou sans luxation du coude chez l’adulte -  Acte soumis à référentiel > - non opérée",
+    "RSC 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une fracture avec ou sans luxation du coude chez l’adulte -  Acte soumis à référentiel > - opérée",
+    "VSM 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection du coude ou de l'avant-bras (hors référentiel) > - non opérée",
+    "VSC 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection du coude ou de l'avant-bras (hors référentiel) > - opérée",
+    "RSM 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation dans le cadre d’une tendinopathie de la coiffe des rotateurs non opérée - Acte soumis à référentiel",
+    "RSC 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation après réinsertion et/ou suture d’un ou de plusieurs tendons de la coiffe des rotateurs de l’épaule, par arthroscopie ou abord direct -  Acte soumis à référentiel",
+    "RSM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une fracture non opérée de l’extrémité proximale de l’humérus - Acte soumis à référentiel",
+    "VSM 7.48": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection de l’épaule ou du bras  (hors référentiel) > - non opérée",
+    "VSC 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation des conséquences d'une affection de l’épaule ou du bras  (hors référentiel) > - opérée",
+    "VSM 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation secondaire à l’affection d'au moins deux segments du même membre supérieur  > - sans chirurgie",
+    "VSC 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre supérieur et de sa racine (hors amputations - l’article 1 F)  > Rééducation secondaire à l’affection d'au moins deux segments du même membre supérieur  > - avec chirurgie sur au moins un segment",
+    "RIC 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une entorse externe récente de cheville-pied (acte avec référentiel pour non opérée) > - opérée",
+    "RIM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une entorse externe récente de cheville-pied (acte avec référentiel pour non opérée) > - non opérée",
+    "VIM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection de la cheville ou pied (hors référentiel) > - non opérée",
+    "VIC 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection du genou ou de la jambe (hors référentiel) >- opérée",
+    "RIC 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation après arthroplastie du genou par prothèse totale ou uni-compartimentaire - Acte soumis à référentiel ",
+    "RIC 7.48": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation après reconstruction du ligament croisé antérieur du genou - Acte soumis à référentiel ",
+    "RIC 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation après méniscectomie isolée, totale ou subtotale, par arthroscopie Acte soumis à référentiel ",
+    "VIM 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection du genou ou de la jambe (hors référentiel) > - non opérée",
+    "VIC 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection du genou ou de la jambe (hors référentiel) > - opérée",
+    "RIC 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation après arthroplastie de hanche par prothèse totale - Acte soumis à référentiel ",
+    "VIM 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection de la hanche ou de la cuisse (hors référentiel) > - non opérée",
+    "VIC 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation des conséquences d'une affection de la hanche ou de la cuisse (hors référentiel) > - opérée",
+    "VIM 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation secondaire à l'affection d'au moins deux segments du même membre inférieur > - sans chirurgie",
+    "VIC 7.52": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques du membre inférieur et de sa racine (hors amputations de l’article 1 F) > Rééducation secondaire à l'affection d'au moins deux segments du même membre inférieur > - avec chirurgie sur au moins un segment",
+    "DRA 7.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation pour déviation latérale ou sagittale du rachis (personnes de moins de 18 ans) > Rééducation pour déviation latérale ou sagittale du rachis (personnes de moins de 18 ans) > Rééducation pour déviation du Rachis lombo-sacré ",
+    "DRA 7.48": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation pour déviation latérale ou sagittale du rachis (personnes de moins de 18 ans) > Rééducation pour déviation du Rachis dorsal",
+    "DRA 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation pour déviation latérale ou sagittale du rachis (personnes de moins de 18 ans) > Rééducation pour déviation du Rachis cervical",
+    "DRA 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation pour déviation latérale ou sagittale du rachis (personnes de moins de 18 ans) > Rééducation pour déviation portant sur au moins deux segments rachis",
+    "APM 7.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation et réadaptation après amputation de tout ou partie des membres, y compris l'adaptation à l'appareillage > Rééducation et réadaptation après amputation de tout ou partie des membres, y compris l'adaptation à l'appareillage > Rééducation après amputation d'un membre supérieur",
+    "APM 7.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation et réadaptation après amputation de tout ou partie des membres, y compris l'adaptation à l'appareillage >  Rééducation après amputation d'un membre inférieur",
+    "TER 9.49": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques de tout ou partie de plusieurs membres, ou du tronc et d'un ou plusieurs membres > Rééducation secondaire à l'affection d’au moins 2 territoires lésés (hors 2 territoires ou plus du même membre ou 2 territoires ou plus du rachis)  > - sans chirurgie",
+    "TER 9.51": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation des conséquences des affections orthopédiques et rhumatologiques de tout ou partie de plusieurs membres, ou du tronc et d'un ou plusieurs membres > Rééducation secondaire à l'affection d’au moins 2 territoires lésés (hors 2 territoires ou plus du même membre ou 2 territoires ou plus du rachis)  > - avec chirurgie sur au moins un territoire",
+    "APM 9.50": "Actes de rééducation des affections orthopédiques et rhumatologiques  > Rééducation et réadaptation après amputation de tout ou partie des membres, y compris l'adaptation à l'appareillage > Rééducation après amputation d'au moins 2 membres",
+    "NMI 8": " Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections rhumatismales inflammatoires > Rééducation des malades atteints de rhumatisme inflammatoire (pelvispondylite, polyarthrite rhumatoïde...) > atteinte localisée à un membre ou le tronc",
+    "NMI 9.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections rhumatismales inflammatoires > Rééducation des malades atteints de rhumatisme inflammatoire (pelvispondylite, polyarthrite rhumatoïde...) > atteinte de plusieurs membres, ou du tronc et d'un ou plusieurs membres",
+    "RAB 8.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation de la paroi abdominale > Rééducation abdominale pré-opératoire ou post-opératoire",
+    "RAB 8": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation de la paroi abdominale > Rééducation abdominale du post-partum",
+    "NMI 8.50": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des atteintes périphériques radiculaires ou tronculaires : > atteintes localisées à un membre ou à la face",
+    "NMI 10.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des atteintes périphériques radiculaires ou tronculaires : > atteintes intéressant plusieurs membres",
+    "NMI 9": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation de l'hémiplégie",
+    "NMI 11.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation de la paraplégie et de la tétraplégie",
+    "NMI 8.51": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des affections neurologiques stables ou évolutives pouvant regrouper des déficiences diverses (commande musculaire, tonus, sensibilité, équilibre, coordination...) en dehors de l'hémiplégie et de la paraplégie, notamment les affections neurodégénératives > - localisation des déficiences à un membre et sa racine",
+    "NMI 10": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des affections neurologiques stables ou évolutives pouvant regrouper des déficiences diverses (commande musculaire, tonus, sensibilité, équilibre, coordination...) en dehors de l'hémiplégie et de la paraplégie, notamment les affections neurodégénératives > - localisation des déficiences à 2 membres ou plus, ou d'un membre et à tout ou partie du tronc et de la face",
+    "NMI 10.99": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des malades atteints de myopathie",
+    "TER 16": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des enfants présentant une paralysie cérébrale ou un polyhandicap",
+    "NMI 11": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences d'affections neurologiques et musculaires > Rééducation des malades atteints d'encéphalopathie infantile, du stade initial aux conséquences à l’âge adulte",
+    "ARL 8.49": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Rééducation des maladies respiratoires avec désencombrement urgent (bronchiolite du nourrisson, poussée aiguë au cours d'une pathologie respiratoire chronique).",
+    "ARL 8.50": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Rééducation des maladies respiratoires, obstructives, restrictives ou mixtes (en dehors des situations d'urgence)",
+    "ARL 8.51": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Rééducation respiratoire préopératoire ou post-opératoire",
+    "ARL 10": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Prise en charge kinésithérapique respiratoire du patient atteint de mucoviscidose.",
+    "ARL 28": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Réadaptation respiratoire kinésithérapique pour les patients atteints de handicap respiratoire chronique et prise en charge individuelle",
+    "ARL 20": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections respiratoires > Réadaptation respiratoire kinésithérapique pour les patients atteints de handicap respiratoire chronique en prise en charge de groupe de 2 à 4 personnes avec rééducation respiratoire en individuel",
+    "ARL 7.99": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation dans le cadre des pathologies maxillo-faciales et oto-rhino-laryngologiques > Rééducation maxillo-faciale en dehors de la paralysie faciale",
+    "ARL 8": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation dans le cadre des pathologies maxillo-faciales et oto-rhino-laryngologiques > Rééducation vestibulaire et des troubles de l'équilibre",
+    "ARL 8.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation dans le cadre des pathologies maxillo-faciales et oto-rhino-laryngologiques > Rééducation des troubles de la déglutition isolés",
+    "RAV 8.01": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour artériopathie des membres inférieurs (claudication, troubles trophiques)",
+    "RAV 7.99": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour insuffisance veineuse des membres inférieurs avec retentissement articulaire et/ou troubles trophiques",
+    "RAV 8": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour lymphœdèmes vrais (après chirurgie et/ou radiothérapie, lymphœdèmes congénitaux) par drainage manuel : > pour un membre ou pour le cou et la face",
+    "RAV 9": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour lymphœdèmes vrais (après chirurgie et/ou radiothérapie, lymphœdèmes congénitaux) par drainage manuel : > pour deux membres",
+    "RAV  15.50": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour un lymphœdème du membre supérieur après traitement d’un cancer du sein, associée à une rééducation de l’épaule homolatérale à la phase intensive du traitement du lymphœdème",
+    "RAV 1": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour un lymphœdème du membre supérieur après traitement d’un cancer du sein, associée à une rééducation de l’épaule homolatérale à la phase intensive du traitement du lymphœdème > Supplément pour bandage multicouche : > un membre",
+    "RAV 2": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections vasculaires > Rééducation pour un lymphœdème du membre supérieur après traitement d’un cancer du sein, associée à une rééducation de l’épaule homolatérale à la phase intensive du traitement du lymphœdème > Supplément pour bandage multicouche : > deux membres",
+    "RAB 8.50": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des conséquences des affections périnéosphinctériennes  > Rééducation périnéale active sous contrôle manuel et/ou électrostimulation et/ou biofeedback ",
+    "RPE 8.50": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation de la déambulation du sujet âgé > Rééducation analytique et globale, musculo-articulaire des deux membres inférieurs, de la posture, de l'équilibre et de la coordination chez le sujet âgé",
+    "RPE 6": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation de la déambulation du sujet âgé > Rééducation de la déambulation dans le cadre du maintien de l'autonomie de la personne âgée (séance d'une durée de l'ordre de vingt minutes)",
+    "RPB 8": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des patients atteints de brûlures > Rééducation d'un patient atteint de brûlures localisées à un membre ou à un segment de membre",
+    "RPB 9": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Rééducation des patients atteints de brûlures > Rééducation d'un patient atteint de brûlures étendues à plusieurs membres et/ou au tronc",
+    "PLL 12": "Actes pratiqués par le MK au cabinet, domicile, dans une structure de soins ou un établissement > Soins palliatifs > Prise en charge, dans le cadre des soins palliatifs, comportant les actes nécessaires en fonction des situations cliniques (mobilisation, massage, drainage bronchique...), cotation journalière forfaitaire quel que soit le nombre d'interventions",
+    // Ajoutez d'autres cotations et textes NGAP ici
+};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var conditionTypeSelect = document.getElementById("conditionType");
+            Object.keys(data).forEach(function(key) {
+                var option = new Option(key, key);
+                conditionTypeSelect.add(option);
+            });
+
+            conditionTypeSelect.addEventListener("change", updateSecondList);
+            document.getElementById("detailsList").addEventListener("change", updateSubDetailsList);
+            document.getElementById("subDetailsList").addEventListener("change", showCotation);
+            document.getElementById("btnMetropole").addEventListener("click", function() {
+            currentKeyValue = keyValueMetropole;
+            showCotation(); // Recalculer la cotation avec le tarif Métropole
+        });
+
+        document.getElementById("btnOutreMer").addEventListener("click", function() {
+            currentKeyValue = keyValueOutreMer;
+            showCotation(); // Recalculer la cotation avec le tarif Outre-Mer
+        });
+    });
+
+        function updateSecondList() {
+            var conditionType = document.getElementById("conditionType").value;
+            var detailsList = document.getElementById("detailsList");
+            var subDetailsList = document.getElementById("subDetailsList");
+            detailsList.innerHTML = "<option value=''>Choisissez...</option>";
+            subDetailsList.innerHTML = "<option value=''>Choisissez...</option>";
+            subDetailsList.style.display = "none";
+            document.querySelector('label[for="subDetailsList"]').style.display = "none";
+            if (conditionType in data) {
+                Object.keys(data[conditionType]).forEach(function(key) {
+                    var option = new Option(key, key);
+                    detailsList.add(option);
+                });
+            }
+            document.getElementById("result").innerHTML = ""; 
+        }
+
+        function updateSubDetailsList() {
+            var conditionType = document.getElementById("conditionType").value;
+            var details = document.getElementById("detailsList").value;
+            var subDetailsList = document.getElementById("subDetailsList");
+            var detailsData = data[conditionType][details];
+            subDetailsList.innerHTML = "<option value=''>Choisissez...</option>";
+            if (typeof detailsData === "object" && Object.keys(detailsData).length > 0) {
+                Object.keys(detailsData).forEach(function(key) {
+                    var option = new Option(key, key);
+                    subDetailsList.add(option);
+                });
+                subDetailsList.style.display = "inline";
+                document.querySelector('label[for="subDetailsList"]').style.display = "inline";
+            } else {
+                subDetailsList.style.display = "none";
+                document.querySelector('label[for="subDetailsList"]').style.display = "none";
+                showCotation(); // Call showCotation here if there are no sub-details
+            }
+        }
+        function showCotation() {
+    var conditionType = document.getElementById("conditionType").value;
+    var details = document.getElementById("detailsList").value;
+    var subDetails = document.getElementById("subDetailsList").value;
+    var result = document.getElementById("result");
+    var cotationKey = "Non disponible"; // Utilisé pour rechercher dans ngapTexts
+    var cotationDisplay = "Non disponible"; // Utilisé pour l'affichage dans l'interface
+
+    if(subDetails && data[conditionType][details][subDetails]) {
+        cotationKey = data[conditionType][details][subDetails];
+    } else if(data[conditionType][details]) {
+        cotationKey = data[conditionType][details];
+    }
+    
+    if(cotationKey !== "Non disponible") {
+        var parts = cotationKey.split(" ");
+        if(parts.length > 1) {
+            var number = parseFloat(parts[1].replace(',', '.')); // Conversion en nombre
+            var amount = number * currentKeyValue; // Calcul du montant
+            cotationDisplay = cotationKey + " - Montant de la séance: " + amount.toFixed(2) + "€";
+        }
+    }
+    
+    var ngapTextElement = document.getElementById("ngapText");
+    var ngapText = ngapTexts[cotationKey] || "Texte NGAP non disponible pour cette cotation."; // Utilisez cotationKey ici
+    ngapTextElement.innerHTML = ngapText;
+    result.innerHTML = "Cotation: " + cotationDisplay; // Utilisez cotationDisplay pour l'affichage
+}
+    </script>
+</body>
+</html>
